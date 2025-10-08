@@ -149,7 +149,7 @@ Get-OrAdd-EnvVar "MYSQL_PASSWORD" $MYSQL_PASSWORD
 Get-OrAdd-EnvVar "MYSQL_ROOT_PASSWORD" $MYSQL_ROOT_PASSWORD
 
 Write-Host "4. Extract Viewer data"
-Unzip-WarFile "viewer/downloads/essential_viewer_61910.war" "EssentialAM/essential_viewer"
+Unzip-WarFile "viewer/downloads/essential_viewer_6210.war" "EssentialAM/essential_viewer"
 
 $PUBLISHER_PASSWORD = Get-OrGenerate-Password "PUBLISHER_PASSWORD"
 
