@@ -24,7 +24,7 @@ EXPOSE 80 8080 2222
 
 # Essential Viewer and Essential Import Utility
 COPY ./downloads/essential_import_utility_294.war /usr/local/tomcat/webapps/essential_import_utility.war
-# COPY ./downloads/essential_viewer_6210.war /usr/local/tomcat/webapps/essential_viewer.war
+# COPY ./downloads/essential_viewer_6211.war /usr/local/tomcat/webapps/essential_viewer.war
 
 # Create a default redirect
 RUN mkdir /usr/local/tomcat/webapps/ROOT
