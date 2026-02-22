@@ -54,5 +54,5 @@
   <user username="role1" password="<must-be-changed>" roles="role1"/>
 -->
   <role rolename="report_publish"/>
-  <user username="publisher" password="haJxmjhq" roles="report_publish"/>
+  <user username="publisher" password="HGYEMO2+" roles="report_publish"/>
 </tomcat-users>

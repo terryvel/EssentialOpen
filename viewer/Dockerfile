@@ -13,12 +13,8 @@ RUN apt-get install -y --no-install-recommends dialog \
 
 COPY sshd_config /etc/ssh/
 
-COPY downloads/oauth2-proxy-v7.6.0.linux-amd64.tar.gz oauth2-proxy-v7.6.0.linux-amd64.tar.gz
-RUN tar -xzf oauth2-proxy-v7.6.0.linux-amd64.tar.gz --strip-components=1 -C /opt/
-RUN rm oauth2-proxy-v7.6.0.linux-amd64.tar.gz
-
-# # Deps, oauth2-proxy, Protege
-RUN apt-get install -y vim golang graphviz netcat
+# Deps, oauth2-proxy, Protege
+RUN apt-get update && apt-get install -y vim graphviz netcat
 
 EXPOSE 80 8080 2222
 
@@ -29,8 +25,6 @@ COPY ./downloads/essential_import_utility_294.war /usr/local/tomcat/webapps/esse
 # Create a default redirect
 RUN mkdir /usr/local/tomcat/webapps/ROOT
 RUN echo '<% response.sendRedirect("/essential_viewer/"); %>' > /usr/local/tomcat/webapps/ROOT/index.jsp
-# Change port of tocat
-RUN sed -i 's/8080/9090/' /usr/local/tomcat/conf/server.xml
 # Change maxHttpHeaderSize in case to use Oauth2 Proxy with Azure Entra ID
 RUN sed -i 's/connectionTimeout="20000"/connectionTimeout="20000" maxHttpHeaderSize="24576"/' /usr/local/tomcat/conf/server.xml
 # Copy tomcat-users 
