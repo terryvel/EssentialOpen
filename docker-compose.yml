@@ -41,7 +41,7 @@ services:
       - "8081:80"
     environment:
       - API_ORIGIN=${API_ORIGIN:-http://localhost:5100}
-      - VIEWER_URL=${VIEWER_URL:-http://localhost:8080/essential_viewer}
+      - VIEWER_URL=${VIEWER_URL:-http://essential-viewer:8080/essential_viewer}
       - VIEWER_USER=${VIEWER_USER:-publisher}
     env_file:
       - ./env_file.env
