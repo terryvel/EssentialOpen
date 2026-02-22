@@ -139,7 +139,6 @@ register_things(){
     az provider register -n microsoft.insights --subscription $SUBSCRIPTION_ID
     az provider register -n Microsoft.ContainerService \
         --subscription $SUBSCRIPTION_ID
-    az provider register -n Microsoft.DBforMySQL --subscription $SUBSCRIPTION_ID
 }
 
 echo 
@@ -205,14 +204,14 @@ if [[ "$answer" =~ ^[Yy]$ ]]; then
     run_command "az acr create --resource-group $RESOURCE_GROUP --name $CONTAINER_REGISTRY --sku Basic --location $LOCATION"
     run_command "az acr update -n $CONTAINER_REGISTRY --admin-enabled true"
 
-    az acr login --name $CONTAINER_REGISTRY
-    docker compose build viewer
-    docker tag viewer $CONTAINER_REGISTRY.azurecr.io/essential-viewer:latest
-    docker push $CONTAINER_REGISTRY.azurecr.io/essential-viewer:latest
+    # az acr login --name $CONTAINER_REGISTRY
+    # docker compose build viewer
+    # docker tag viewer $CONTAINER_REGISTRY.azurecr.io/essential-viewer:latest
+    # docker push $CONTAINER_REGISTRY.azurecr.io/essential-viewer:latest
 
     run_command "az appservice plan create --name $APP_SERVICE_PLAN --resource-group $RESOURCE_GROUP --sku P0V3 --location $LOCATION --is-linux"
     run_command "az webapp create --resource-group $RESOURCE_GROUP --plan $APP_SERVICE_PLAN --name $WEBAPP --deployment-container-image-name $CONTAINER_REGISTRY.azurecr.io/essential-viewer:latest"
-    run_command "az webapp config storage-account add --resource-group $RESOURCE_GROUP --name $WEBAPP --custom-id Viewer --storage-type AzureFiles --account-name $STORAGE_ACCOUNT --share-name essentialviewer --access-key $STG_ACCESS_KEY --mount-path /usr/local/tomcat/webapps/essential_viewer"
+    # run_command "az webapp config storage-account add --resource-group $RESOURCE_GROUP --name $WEBAPP --custom-id Viewer --storage-type AzureFiles --account-name $STORAGE_ACCOUNT --share-name essentialviewer --access-key $STG_ACCESS_KEY --mount-path /usr/local/tomcat/webapps/essential_viewer"
 
     HOSTNAME_WEBAPP=$(get_env_var "HOSTNAME_WEBAPP")
     if [ -z "$HOSTNAME_WEBAPP" ]; then
@@ -228,19 +227,31 @@ if [[ "$answer" =~ ^[Yy]$ ]]; then
         get_or_add_env_var "OAUTH2_PROXY_COOKIE_SECRET"
     fi
 
-    OAUTH2_PROXY_UPSTREAMS="http://localhost:9090/"
-    OAUTH2_PROXY_PROVIDER_DISPLAY_NAME="Azure"
-    OAUTH2_PROXY_PROVIDER="oidc"
-    OAUTH2_PROXY_OIDC_ISSUER_URL="https://login.microsoftonline.com/${OAUTH2_PROXY_AZURE_TENANT}/v2.0"
-    OAUTH2_PROXY_PASS_ACCESS_TOKEN="true"
+    # OAUTH2_PROXY_UPSTREAMS="http://localhost:9090/"
+    # OAUTH2_PROXY_PROVIDER_DISPLAY_NAME="Azure"
+    # OAUTH2_PROXY_PROVIDER="oidc"
+    # OAUTH2_PROXY_OIDC_ISSUER_URL="https://login.microsoftonline.com/${OAUTH2_PROXY_AZURE_TENANT}/v2.0"
+    # OAUTH2_PROXY_PASS_ACCESS_TOKEN="true"
+    # OAUTH2_PROXY_EMAIL_DOMAINS="*"
+    # OAUTH2_PROXY_REDIRECT_URL="http://localhost/oauth2/callback"
+    # OAUTH2_PROXY_SKIP_AUTH_ROUTES='"GET=^/essential_viewer/reportService,POST=^/essential_viewer/reportService"'
+
+    OAUTH2_PROXY_PROVIDER="entra-id"
+    OAUTH2_PROXY_OIDC_ISSUER_URL="https://login.microsoftonline.com/<OAUTH2_PROXY_AZURE_TENANT>/v2.0"
+    OAUTH2_PROXY_SCOPE="openid"
+    OAUTH2_PROXY_SKIP_AUTH_ROUTES='"GET=^/essential_viewer/reportService,POST=^/essential_viewer/reportService"'
     OAUTH2_PROXY_EMAIL_DOMAINS="*"
     OAUTH2_PROXY_REDIRECT_URL="http://localhost/oauth2/callback"
-    OAUTH2_PROXY_SKIP_AUTH_ROUTES='"GET=^/essential_viewer/reportService,POST=^/essential_viewer/reportService"'
+    OAUTH2_PROXY_PASS_ACCESS_TOKEN="true"
+    OAUTH2_PROXY_PROVIDER_DISPLAY_NAME="Azure"
+    OAUTH2_PROXY_UPSTREAMS="http://localhost:9090/"
+
 
     get_or_add_env_var "OAUTH2_PROXY_UPSTREAMS"
     get_or_add_env_var "OAUTH2_PROXY_PROVIDER_DISPLAY_NAME"
     get_or_add_env_var "OAUTH2_PROXY_PROVIDER"
     get_or_add_env_var "OAUTH2_PROXY_OIDC_ISSUER_URL"
+    get_or_add_env_var "OAUTH2_PROXY_SCOPE"
     get_or_add_env_var "OAUTH2_PROXY_PASS_ACCESS_TOKEN"
     get_or_add_env_var "OAUTH2_PROXY_EMAIL_DOMAINS"
     get_or_add_env_var "OAUTH2_PROXY_REDIRECT_URL"
@@ -253,6 +264,7 @@ if [[ "$answer" =~ ^[Yy]$ ]]; then
     run_command "az webapp config appsettings set --resource-group $RESOURCE_GROUP --name $WEBAPP --settings OAUTH2_PROXY_CLIENT_SECRET=$OAUTH2_PROXY_CLIENT_SECRET"
     run_command "az webapp config appsettings set --resource-group $RESOURCE_GROUP --name $WEBAPP --settings OAUTH2_PROXY_AZURE_TENANT=$OAUTH2_PROXY_AZURE_TENANT"
     run_command "az webapp config appsettings set --resource-group $RESOURCE_GROUP --name $WEBAPP --settings OAUTH2_PROXY_OIDC_ISSUER_URL=$OAUTH2_PROXY_OIDC_ISSUER_URL"
+    run_command "az webapp config appsettings set --resource-group $RESOURCE_GROUP --name $WEBAPP --settings OAUTH2_PROXY_SCOPE=$OAUTH2_PROXY_SCOPE"
     run_command "az webapp config appsettings set --resource-group $RESOURCE_GROUP --name $WEBAPP --settings OAUTH2_PROXY_PASS_ACCESS_TOKEN=$OAUTH2_PROXY_PASS_ACCESS_TOKEN"
     run_command "az webapp config appsettings set --resource-group $RESOURCE_GROUP --name $WEBAPP --settings OAUTH2_PROXY_EMAIL_DOMAINS=$OAUTH2_PROXY_EMAIL_DOMAINS"
     run_command "az webapp config appsettings set --resource-group $RESOURCE_GROUP --name $WEBAPP --settings OAUTH2_PROXY_REDIRECT_URL=https://$HOSTNAME_WEBAPP/oauth2/callback"
