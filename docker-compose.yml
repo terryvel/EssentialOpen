@@ -29,30 +29,19 @@ services:
       PPRJ_FILE: "/app/resources/essential/essential_baseline_6_21_0.pprj"
       JARS_DIR: "/app/jars"
       PPRJ_DIR: "/app/resources/essential"
-    command: flask run --debug
-      
-  # protege:
-  #   image: protege
-  #   platform: linux/amd64
-  #   hostname: essential-protege
-  #   build: 
-  #     context: protege
-  #   volumes:
-  #     - ./EssentialAM/Repository:/opt/EssentialAM/Repository
-  #     - ./EssentialAM/server:/opt/EssentialAM/server
-  #   ports:
-  #     - 2222:2222
-  #     - 5200:5200
-  #     - 5100:5100
-
-  # db:
-  #   image: mysql:9.0
-  #   hostname: essential-db
-  #   env_file:
-  #     - ./env_file.env
-  #   volumes:
-  #     - ./data:/var/lib/mysql
-  #     - ./initdb:/docker-entrypoint-initdb.d/
-  #   ports:
-  #     - "3306:3306"
-
+    command: flask run
+    # command: flask run --debug
+  
+  admin:
+    build:
+      context: https://github.com/terryvel/essential-open-admin.git#main
+      dockerfile: Dockerfile
+    container_name: essential-admin
+    ports:
+      - "8081:80"
+    environment:
+      - API_ORIGIN=${API_ORIGIN:-http://localhost:5100}
+      - VIEWER_URL=${VIEWER_URL:-http://localhost:8080/essential_viewer}
+      - VIEWER_USER=${VIEWER_USER:-publisher}
+    env_file:
+      - ./env_file.env

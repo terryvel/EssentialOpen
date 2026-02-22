@@ -83,6 +83,8 @@ echo
 echo "3. Extract Viewer data"
 unzip_file "viewer/downloads/essential_viewer_6211.war" "EssentialAM/essential_viewer"
 PUBLISHER_PASSWORD=$(get_or_generate_password "PUBLISHER_PASSWORD")
+VIEWER_PWD=$PUBLISHER_PASSWORD
+get_or_add_env_var "VIEWER_PWD"
 perl -pi -e "s|username=\"publisher\" password=\".*?\"|username=\"publisher\" password=\"$PUBLISHER_PASSWORD\"|g" viewer/tomcat-users.xml
 cp viewer/web.xml EssentialAM/essential_viewer/WEB-INF/web.xml
 cp viewer/core_header.xsl EssentialAM/essential_viewer/common/core_header.xsl
