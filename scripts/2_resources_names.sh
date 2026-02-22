@@ -57,7 +57,6 @@ if [[ "$answer" =~ ^[Yy]$ ]]; then
     export APP_SERVICE_PLAN="asp-$codename"
     export WEBAPP=$codename
     export CONTAINER_INSTANCE=protege-$codename
-    export MYSQL_NAME=$codename
 
     echo "Floowing resources will be created on Azure in location ${LOCATION}:"
     echo
@@ -68,7 +67,6 @@ if [[ "$answer" =~ ^[Yy]$ ]]; then
     echo "     App Service plan: ${APP_SERVICE_PLAN}"
     echo "App Service / Web App: ${WEBAPP}"
     echo "   Container instance: ${CONTAINER_INSTANCE}"
-    echo "   Database for MySQL: ${MYSQL_NAME}"
     echo
 
 fi
