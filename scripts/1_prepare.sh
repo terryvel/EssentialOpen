@@ -78,7 +78,6 @@ echo
 
 echo "2. Extract repository and server files."
 unzip_file "protege/downloads/essential_baseline_6_21.zip" "EssentialAM/Repository"
-unzip_file "protege/downloads/metaproject.zip" "EssentialAM/server"
 echo
 
 echo "3. Extract Viewer data"
