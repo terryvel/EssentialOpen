@@ -77,28 +77,16 @@ done < downloads.txt
 echo
 
 echo "2. Extract repository and server files."
-unzip_file "protege/downloads/essential_baseline_v6_19.zip" "EssentialAM/Repository"
+unzip_file "protege/downloads/essential_baseline_6_21.zip" "EssentialAM/Repository"
 unzip_file "protege/downloads/metaproject.zip" "EssentialAM/server"
 echo
 
-echo "3. Define Database Passwords"
-MYSQL_USER=essential
-MYSQL_DATABASE=essentialdb
-MYSQL_PASSWORD=$(get_or_generate_password "MYSQL_PASSWORD")
-MYSQL_ROOT_PASSWORD=$(get_or_generate_password "MYSQL_ROOT_PASSWORD")
-get_or_add_env_var "MYSQL_USER"
-get_or_add_env_var "MYSQL_DATABASE"
-get_or_add_env_var "MYSQL_PASSWORD"
-get_or_add_env_var "MYSQL_ROOT_PASSWORD"
-perl -0777 -i -pe "s|\(name \"password\"\)\n\t\(string_value \".*?\"\)\)|\(name \"password\"\)\n\t\(string_value \"$MYSQL_PASSWORD\"\)\)|g" EssentialAM/Repository/essential_baseline_6_19.pprj
-echo
-
-echo "4. Extract Viewer data"
+echo "3. Extract Viewer data"
 unzip_file "viewer/downloads/essential_viewer_6211.war" "EssentialAM/essential_viewer"
 PUBLISHER_PASSWORD=$(get_or_generate_password "PUBLISHER_PASSWORD")
 perl -pi -e "s|username=\"publisher\" password=\".*?\"|username=\"publisher\" password=\"$PUBLISHER_PASSWORD\"|g" viewer/tomcat-users.xml
 cp viewer/web.xml EssentialAM/essential_viewer/WEB-INF/web.xml
 cp viewer/core_header.xsl EssentialAM/essential_viewer/common/core_header.xsl
 echo "PUBLISHER_PASSWORD=${PUBLISHER_PASSWORD}"
-echo "Yo'll need this password to updade viewer from Protégé"
+echo "You'll need this password to update viewer from Protégé or Web Admin"
 echo
