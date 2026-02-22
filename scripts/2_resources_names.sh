@@ -38,6 +38,7 @@ echo "This script will export variables with resource names that will be used"
 echo "in the next scripts."
 echo "You can pass an argument to define the codename"
 echo "like: source $script_name --codename <name>."
+echo "sample: source scripts/2_resources_names.sh --codename essential-witchweeds"
 echo "If no argument is passed, a suggestion of codename will be generated."
 echo "If you continue now your project codename will be:" 
 echo 
