@@ -38,11 +38,12 @@ validate_output() {
         "OAUTH2_PROXY_REDIRECT_URL" "OAUTH2_PROXY_COOKIE_SECRET" \
         "OAUTH2_PROXY_SKIP_AUTH_ROUTES", "WEBSITES_CONTAINER_START_TIME_LIMIT")
     if echo "$output" | jq -e 'type == "object"' > /dev/null; then
-        provisioningState1=$(echo "$output" | jq -r '.properties.provisioningState')
-        appId=$(echo "$output" | jq -r '.appId')
-        provisioningState2=$(echo "$output" | jq -r '.provisioningState')
-        ID=$(echo "$output" | jq -r '.id')
-        stgOk=$(echo "$output" | jq -r '.[].state')
+        provisioningState1=$(echo "$output" | jq -r '.properties.provisioningState // empty')
+        appId=$(echo "$output" | jq -r '.appId // empty')
+        provisioningState2=$(echo "$output" | jq -r '.provisioningState // empty')
+        ID=$(echo "$output" | jq -r '.id // empty')
+        # Safer check for .state in nested objects or top level
+        stgOk=$(echo "$output" | jq -r 'if type == "object" then (.state // (.[ ] | select(type == "object")? | .state?) // empty) else empty end' 2>/dev/null | head -n 1)
     elif echo "$output" | jq -e 'type == "array"' > /dev/null; then
         for name in "${required_names[@]}"; do
             if echo "$output" | jq -e --arg name "$name" '.[] | select(.name == $name)' > /dev/null; then
