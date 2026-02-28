@@ -20,6 +20,21 @@ log_command() {
     echo "$command" >> "$LOG_FILE"
 }
 
+# Function to wait until a resource provider is registered
+wait_for_provider_registration() {
+    local namespace=$1
+    echo "Waiting for provider $namespace to be Registered..."
+    while true; do
+        local state=$(az provider show --namespace "$namespace" --query registrationState -o tsv 2>/dev/null)
+        if [[ "$state" == "Registered" ]]; then
+            echo "Provider $namespace is Registered."
+            break
+        fi
+        echo "Current state: $state. Waiting 10 seconds..."
+        sleep 10
+    done
+}
+
 
 # Function to validate the command output
 # Function to validate the provisioningState and appId in the JSON output
@@ -178,6 +193,15 @@ if [[ "$answer" =~ ^[Yy]$ ]]; then
         get_or_add_env_var "OAUTH2_PROXY_AZURE_TENANT"
     fi
     
+    az provider register --namespace Microsoft.Quota
+    wait_for_provider_registration "Microsoft.Quota"
+
+    az provider register --namespace Microsoft.Web
+    wait_for_provider_registration "Microsoft.Web"
+
+    az provider register --namespace Microsoft.App
+    wait_for_provider_registration "Microsoft.App"
+
     run_command "az group create --name '$RESOURCE_GROUP' --location '$LOCATION'"
     run_command "az ad app create --display-name $APP_REGISTRATION"
 
@@ -210,8 +234,9 @@ if [[ "$answer" =~ ^[Yy]$ ]]; then
     # docker tag viewer $CONTAINER_REGISTRY.azurecr.io/essential-viewer:latest
     # docker push $CONTAINER_REGISTRY.azurecr.io/essential-viewer:latest
 
-    run_command "az appservice plan create --name $APP_SERVICE_PLAN --resource-group $RESOURCE_GROUP --sku P0V3 --location $LOCATION --is-linux"
-    run_command "az webapp create --resource-group $RESOURCE_GROUP --plan $APP_SERVICE_PLAN --name $WEBAPP --deployment-container-image-name $CONTAINER_REGISTRY.azurecr.io/essential-viewer:latest"
+    run_command "az appservice plan create --name $APP_SERVICE_PLAN --resource-group $RESOURCE_GROUP --sku P1V3 --location $LOCATION --is-linux"
+    # run_command "az webapp create --resource-group $RESOURCE_GROUP --plan $APP_SERVICE_PLAN --name $WEBAPP --deployment-container-image-name $CONTAINER_REGISTRY.azurecr.io/essential-viewer:latest"
+    run_command "az webapp create --resource-group $RESOURCE_GROUP --plan $APP_SERVICE_PLAN --name $WEBAPP --deployment-container-image-name nginx:latest"
     # run_command "az webapp config storage-account add --resource-group $RESOURCE_GROUP --name $WEBAPP --custom-id Viewer --storage-type AzureFiles --account-name $STORAGE_ACCOUNT --share-name essentialviewer --access-key $STG_ACCESS_KEY --mount-path /usr/local/tomcat/webapps/essential_viewer"
 
     HOSTNAME_WEBAPP=$(get_env_var "HOSTNAME_WEBAPP")
@@ -220,7 +245,7 @@ if [[ "$answer" =~ ^[Yy]$ ]]; then
         get_or_add_env_var "HOSTNAME_WEBAPP"
     fi
 
-    run_command "az ad app update --id $OAUTH2_PROXY_CLIENT_ID --web-redirect-uris 'http://localhost/oauth2/callback' 'https://$HOSTNAME_WEBAPP/oauth2/callback'"
+    az ad app update --id $OAUTH2_PROXY_CLIENT_ID --web-redirect-uris 'http://localhost/oauth2/callback' 'https://$HOSTNAME_WEBAPP/oauth2/callback'
 
     OAUTH2_PROXY_COOKIE_SECRET=$(get_env_var "OAUTH2_PROXY_COOKIE_SECRET")
     if [ -z "$OAUTH2_PROXY_COOKIE_SECRET" ]; then
@@ -238,14 +263,17 @@ if [[ "$answer" =~ ^[Yy]$ ]]; then
     # OAUTH2_PROXY_SKIP_AUTH_ROUTES='"GET=^/essential_viewer/reportService,POST=^/essential_viewer/reportService"'
 
     OAUTH2_PROXY_PROVIDER="entra-id"
-    OAUTH2_PROXY_OIDC_ISSUER_URL="https://login.microsoftonline.com/<OAUTH2_PROXY_AZURE_TENANT>/v2.0"
-    OAUTH2_PROXY_SCOPE="openid"
+    OAUTH2_PROXY_OIDC_ISSUER_URL="https://login.microsoftonline.com/${OAUTH2_PROXY_AZURE_TENANT}/v2.0"
+    OAUTH2_PROXY_SCOPE="openid profile email"
+    OAUTH2_PROXY_OIDC_EMAIL_CLAIM=preferred_username
+    OAUTH2_PROXY_INSECURE_OIDC_ALLOW_UNVERIFIED_EMAIL="true"
     OAUTH2_PROXY_SKIP_AUTH_ROUTES='"GET=^/essential_viewer/reportService,POST=^/essential_viewer/reportService"'
     OAUTH2_PROXY_EMAIL_DOMAINS="*"
     OAUTH2_PROXY_REDIRECT_URL="http://localhost/oauth2/callback"
     OAUTH2_PROXY_PASS_ACCESS_TOKEN="true"
     OAUTH2_PROXY_PROVIDER_DISPLAY_NAME="Azure"
-    OAUTH2_PROXY_UPSTREAMS="http://localhost:9090/"
+    OAUTH2_PROXY_UPSTREAMS="http://localhost:80/"
+    OAUTH2_PROXY_HTTP_ADDRESS="0.0.0.0:4180"
 
 
     get_or_add_env_var "OAUTH2_PROXY_UPSTREAMS"
@@ -257,6 +285,9 @@ if [[ "$answer" =~ ^[Yy]$ ]]; then
     get_or_add_env_var "OAUTH2_PROXY_EMAIL_DOMAINS"
     get_or_add_env_var "OAUTH2_PROXY_REDIRECT_URL"
     get_or_add_env_var "OAUTH2_PROXY_SKIP_AUTH_ROUTES"
+    get_or_add_env_var "OAUTH2_PROXY_HTTP_ADDRESS"
+    get_or_add_env_var "OAUTH2_PROXY_OIDC_EMAIL_CLAIM"
+    get_or_add_env_var "OAUTH2_PROXY_INSECURE_OIDC_ALLOW_UNVERIFIED_EMAIL"
 
     run_command "az webapp config appsettings set --resource-group $RESOURCE_GROUP --name $WEBAPP --settings OAUTH2_PROXY_UPSTREAMS=$OAUTH2_PROXY_UPSTREAMS"
     run_command "az webapp config appsettings set --resource-group $RESOURCE_GROUP --name $WEBAPP --settings OAUTH2_PROXY_PROVIDER_DISPLAY_NAME=$OAUTH2_PROXY_PROVIDER_DISPLAY_NAME"
@@ -271,6 +302,8 @@ if [[ "$answer" =~ ^[Yy]$ ]]; then
     run_command "az webapp config appsettings set --resource-group $RESOURCE_GROUP --name $WEBAPP --settings OAUTH2_PROXY_REDIRECT_URL=https://$HOSTNAME_WEBAPP/oauth2/callback"
     run_command "az webapp config appsettings set --resource-group $RESOURCE_GROUP --name $WEBAPP --settings OAUTH2_PROXY_COOKIE_SECRET=$OAUTH2_PROXY_COOKIE_SECRET"
     run_command "az webapp config appsettings set --resource-group $RESOURCE_GROUP --name $WEBAPP --settings OAUTH2_PROXY_SKIP_AUTH_ROUTES=$OAUTH2_PROXY_SKIP_AUTH_ROUTES"
+    run_command "az webapp config appsettings set --resource-group $RESOURCE_GROUP --name $WEBAPP --settings OAUTH2_PROXY_OIDC_EMAIL_CLAIM=$OAUTH2_PROXY_OIDC_EMAIL_CLAIM"
+    run_command "az webapp config appsettings set --resource-group $RESOURCE_GROUP --name $WEBAPP --settings OAUTH2_PROXY_INSECURE_OIDC_ALLOW_UNVERIFIED_EMAIL=$OAUTH2_PROXY_INSECURE_OIDC_ALLOW_UNVERIFIED_EMAIL"
     run_command "az webapp config appsettings set --resource-group $RESOURCE_GROUP --name $WEBAPP --settings WEBSITES_CONTAINER_START_TIME_LIMIT=600"
     run_command "az webapp restart --resource-group $RESOURCE_GROUP --name $WEBAPP"
 fi

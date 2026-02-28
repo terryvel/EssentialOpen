@@ -50,7 +50,7 @@ echo "Do you want to proceed? (y/n): "
 read answer
 
 if [[ "$answer" =~ ^[Yy]$ ]]; then
-    export LOCATION="eastus2"
+    export LOCATION="brazilsouth"
     export RESOURCE_GROUP="rg-$codename"
     export APP_REGISTRATION=app-$codename
     export STORAGE_ACCOUNT="${second_part_codename:0:18}stg001"
