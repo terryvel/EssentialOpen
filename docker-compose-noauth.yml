@@ -5,18 +5,11 @@ services:
     ports:
       - "80:80"
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx/nginx-noauth.conf:/etc/nginx/conf.d/default.conf
     depends_on:
       - essential-viewer
       - essential-api
       - essential-admin
-
-  oauth2-proxy:
-    image: quay.io/oauth2-proxy/oauth2-proxy:v7.14.0
-    env_file:
-      - ./env_file.env
-    ports:
-      - "4180:4180"
 
   essential-viewer:
     platform: linux/amd64
@@ -47,7 +40,6 @@ services:
       JARS_DIR: "/app/jars"
       PPRJ_DIR: "/app/resources/essential"
     command: flask run
-    # command: flask run --debug
   
   essential-admin:
     build:

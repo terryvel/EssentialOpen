@@ -77,11 +77,13 @@ done < downloads.txt
 echo
 
 echo "2. Extract repository and server files."
-unzip_file "protege/downloads/essential_baseline_6_21.zip" "EssentialAM/Repository"
+REPO_FILE=$(cat downloads.txt| grep essential_baseline | cut -d ' ' -f 2 | xargs basename)
+unzip_file "protege/downloads/$REPO_FILE" "EssentialAM/Repository"
 echo
 
 echo "3. Extract Viewer data"
-unzip_file "viewer/downloads/essential_viewer_6211.war" "EssentialAM/essential_viewer"
+VIEWER_FILE=$(cat downloads.txt| grep essential_viewer | cut -d ' ' -f 2 | xargs basename)
+unzip_file "viewer/downloads/$VIEWER_FILE" "EssentialAM/essential_viewer"
 PUBLISHER_PASSWORD=$(get_or_generate_password "PUBLISHER_PASSWORD")
 VIEWER_PWD=$PUBLISHER_PASSWORD
 get_or_add_env_var "VIEWER_PWD"

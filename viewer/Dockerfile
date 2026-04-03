@@ -3,7 +3,7 @@ FROM tomcat:8.5-jre8
 
 RUN apt-get update && apt-get upgrade -y
 
-# Enable and install SSH
+# Enable and install SSH for Azure
 # ssh root@127.0.0.1 -p 2222 -c aes256-cbc
 ENV SSH_PASSWD "root:Docker!"
 RUN apt-get install -y --no-install-recommends dialog \
@@ -19,8 +19,8 @@ RUN apt-get update && apt-get install -y vim graphviz netcat
 EXPOSE 80 8080 2222
 
 # Essential Viewer and Essential Import Utility
-COPY ./downloads/essential_import_utility_294.war /usr/local/tomcat/webapps/essential_import_utility.war
-# COPY ./downloads/essential_viewer_6211.war /usr/local/tomcat/webapps/essential_viewer.war
+COPY ./downloads/essential_import_utility_2101.war /usr/local/tomcat/webapps/essential_import_utility.war
+COPY ./downloads/essential_viewer_6217.war /usr/local/tomcat/webapps/essential_viewer.war
 
 # Create a default redirect
 RUN mkdir /usr/local/tomcat/webapps/ROOT
